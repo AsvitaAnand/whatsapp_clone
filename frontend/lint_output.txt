@@ -1,0 +1,93 @@
+
+C:\Users\Admin\Downloads\Telegram Desktop\whastup_clone\frontend\src\App.jsx
+  14:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  12 |     const savedUser = localStorage.getItem('whatsapp_clone_user');
+  13 |     if (savedUser) {
+> 14 |       setCurrentUser(JSON.parse(savedUser));
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     }
+  16 |   }, []);
+  17 |  react-hooks/set-state-in-effect
+
+C:\Users\Admin\Downloads\Telegram Desktop\whastup_clone\frontend\src\components\CallModal.jsx
+   28:9  error    Error: Cannot access variable before it is declared
+
+`setupPeerConnection` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  26 |         setHasVideo(callState.isVideo);
+  27 |
+> 28 |         setupPeerConnection(stream);
+     |         ^^^^^^^^^^^^^^^^^^^ `setupPeerConnection` accessed before it is declared
+  29 |
+  30 |         if (callState.status === 'calling') {
+  31 |           const offer = await peerConnection.current.createOffer();
+
+  54 |   }, [callState.status]);
+  55 |
+> 56 |   const setupPeerConnection = (stream) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 57 |     peerConnection.current = new RTCPeerConnection({
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 58 |       iceServers: [
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 81 |     };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 82 |   };
+     | ^^^^^ `setupPeerConnection` is declared here
+  83 |
+  84 |   // Listeners
+  85 |   useEffect(() => {  react-hooks/immutability
+   42:9  error    Error: Cannot access variable before it is declared
+
+`endCall` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+  40 |       } catch (err) {
+  41 |         console.error("Failed to acquire media devices: ", err);
+> 42 |         endCall(true);
+     |         ^^^^^^^ `endCall` accessed before it is declared
+  43 |       }
+  44 |     };
+  45 |
+
+  156 |   };
+  157 |
+> 158 |   const endCall = (emit = true) => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 159 |     if (localStream.current) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 160 |       localStream.current.getTracks().forEach(t => t.stop());
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 170 |     setCallState({ status: 'idle' });
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 171 |   };
+      | ^^^^^ `endCall` is declared here
+  172 |
+  173 |   const toggleVideo = () => {
+  174 |     const videoTrack = localStream.current?.getVideoTracks()[0];                                                                                          react-hooks/immutability
+   54:6  warning  React Hook useEffect has missing dependencies: 'callState.isVideo', 'callState.target', 'currentUser._id', 'endCall', 'setupPeerConnection', and 'socket'. Either include them or remove the dependency array. If 'setHasVideo' needs the current value of 'callState.isVideo', you can also switch to useReducer instead of useState and read 'callState.isVideo' in the reducer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  128:6  warning  React Hook useEffect has missing dependencies: 'endCall' and 'setCallState'. Either include them or remove the dependency array. If 'setCallState' changes too often, find the parent component that defines it and wrap that definition in useCallback                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+
+C:\Users\Admin\Downloads\Telegram Desktop\whastup_clone\frontend\src\components\ChatLayout.jsx
+  128:17  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+  126 |     <div className="chat-layout">
+  127 |       <CallModal 
+> 128 |         socket={socketRef.current}
+      |                 ^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  129 |         currentUser={currentUser}
+  130 |         callState={callState}
+  131 |         setCallState={setCallState}  react-hooks/refs
+
+Γ£û 6 problems (4 errors, 2 warnings)
+
