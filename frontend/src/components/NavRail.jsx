@@ -1,7 +1,7 @@
 import React from 'react';
 import { MdMessage, MdCall, MdDonutLarge, MdPeople, MdStarBorder, MdArchive, MdSettings, MdPerson } from 'react-icons/md';
 
-const NavRail = ({ currentUser, activeTab, onTabChange, onOpenSettings }) => {
+const NavRail = ({ currentUser, activeTab, onTabChange, onOpenSettings, unreadCount }) => {
   return (
     <div className="nav-rail">
       <div className="nav-rail-top">
@@ -12,8 +12,7 @@ const NavRail = ({ currentUser, activeTab, onTabChange, onOpenSettings }) => {
         >
           <div className="rail-icon-wrapper">
              <MdMessage size={24} />
-             {/* Fake replica unread badge */}
-             <span className="rail-badge">99+</span>
+             {unreadCount > 0 && <span className="rail-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}
           </div>
         </button>
         <button 
@@ -41,8 +40,9 @@ const NavRail = ({ currentUser, activeTab, onTabChange, onOpenSettings }) => {
           <MdPeople size={24} />
         </button>
         <button 
-          className="rail-icon-btn meta-ai-icon" 
+          className={`rail-icon-btn meta-ai-icon ${activeTab === 'meta-ai' ? 'active' : ''}`} 
           title="Meta AI"
+          onClick={() => onTabChange('meta-ai')}
         >
           <div className="meta-ai-circle"></div>
         </button>

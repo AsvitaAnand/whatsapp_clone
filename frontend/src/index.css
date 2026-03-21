@@ -799,6 +799,23 @@ body {
   gap: 4px; /* Reduced gap representing connected messages */
 }
 
+.date-divider-wrapper {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+  width: 100%;
+}
+
+.date-divider {
+  background-color: var(--bg-color-panel);
+  color: var(--text-color-secondary);
+  font-size: 12.5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 0.5px rgba(11,20,26,.13);
+  text-transform: uppercase;
+}
+
 .message-wrapper {
   display: flex;
   width: 100%;
@@ -947,6 +964,35 @@ body {
 .chat-input-container .icon-btn:hover {
   background: none;
   color: var(--text-color-primary);
+}
+
+.scroll-bottom-btn {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: var(--bg-color-panel);
+  color: var(--text-color-secondary);
+  border: none;
+  box-shadow: 0 1px 3px rgba(11,20,26,.16), 0 2px 5px rgba(11,20,26,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.scroll-bottom-btn:hover {
+  transform: scale(1.05);
+}
+
+.status-ring {
+  padding: 2px;
+  border: 2px solid var(--accent-color);
+  border-radius: 50%;
 }
 
 /* ----------------- SETTINGS & PROFILE ----------------- */

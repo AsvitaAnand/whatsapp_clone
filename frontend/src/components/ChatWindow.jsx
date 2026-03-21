@@ -1,24 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MdSend, MdPerson, MdCall, MdVideocam, MdMoreVert, MdEmojiEmotions, MdAttachFile, MdMic, MdStop, MdCheck, MdDoneAll } from 'react-icons/md';
-import { format } from 'date-fns';
+import { MdSend, MdPerson, MdCall, MdVideocam, MdMoreVert, MdEmojiEmotions, MdAttachFile, MdMic, MdStop, MdCheck, MdDoneAll, MdKeyboardArrowDown, MdSearch, MdGroup, MdBrightness4, MdBrightness7 } from 'react-icons/md';
+import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import EmojiPicker from 'emoji-picker-react';
 
-const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnline, onStartCall, users, socket }) => {
+const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnline, onStartCall, users, socket, onUserAction, onClearChat }) => {
   const [inputText, setInputText] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [typingUsers, setTypingUsers] = useState(new Set());
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [chatWallpaper, setChatWallpaper] = useState('');
+  const [emojiTheme, setEmojiTheme] = useState(() => localStorage.getItem('whatsapp_emoji_theme') || 'dark');
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const wallpaperInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
+    setShowScrollButton(!isAtBottom);
   };
 
   useEffect(() => {
@@ -27,6 +40,14 @@ const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnli
 
   useEffect(() => {
     setTypingUsers(new Set());
+  }, [selectedUser]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      const storedWallpapers = JSON.parse(localStorage.getItem('whatsapp_wallpapers') || '{}');
+      setChatWallpaper(storedWallpapers[selectedUser._id] || '');
+      setShowMenu(false);
+    }
   }, [selectedUser]);
 
   useEffect(() => {
@@ -139,6 +160,18 @@ const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnli
     }
   };
 
+  const formatLastSeen = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const d = new Date(dateString);
+      if (isToday(d)) return `today at ${format(d, 'h:mm a')}`;
+      if (isYesterday(d)) return `yesterday at ${format(d, 'h:mm a')}`;
+      return format(d, 'dd/MM/yyyy');
+    } catch {
+      return '';
+    }
+  };
+
   const renderTicks = (status) => {
     if (status === 'sent') return <MdCheck size={16} color="#8696a0" style={{marginLeft: 4, verticalAlign: 'text-bottom'}}/>;
     if (status === 'delivered') return <MdDoneAll size={16} color="#8696a0" style={{marginLeft: 4, verticalAlign: 'text-bottom'}}/>;
@@ -150,6 +183,31 @@ const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnli
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const handleWallpaperSelected = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result;
+        setChatWallpaper(base64);
+        const storedWallpapers = JSON.parse(localStorage.getItem('whatsapp_wallpapers') || '{}');
+        storedWallpapers[selectedUser._id] = base64;
+        localStorage.setItem('whatsapp_wallpapers', JSON.stringify(storedWallpapers));
+        setShowMenu(false);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+  
+  const handleRemoveWallpaper = () => {
+    setChatWallpaper('');
+    const storedWallpapers = JSON.parse(localStorage.getItem('whatsapp_wallpapers') || '{}');
+    delete storedWallpapers[selectedUser._id];
+    localStorage.setItem('whatsapp_wallpapers', JSON.stringify(storedWallpapers));
+    setShowMenu(false);
   };
 
   const chatMessages = messages.filter(msg => {
@@ -179,14 +237,42 @@ const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnli
               <span className="online-status" style={{fontSize: '12px', opacity: 0.8}}>
                 {selectedUser.members?.map(mId => String(mId) === String(currentUser._id) ? 'You' : users?.find(u => String(u._id) === String(mId))?.username || `Unknown`).filter(Boolean).join(', ')}
               </span>
-            ) : isOnline && <span className="online-status">online</span>}
+            ) : isOnline ? (
+              <span className="online-status">online</span>
+            ) : (
+              <span className="online-status">
+                {selectedUser.lastSeen ? `last seen ${formatLastSeen(selectedUser.lastSeen)}` : 'offline'}
+              </span>
+            )}
           </div>
         </div>
-        <div className="chat-header-right">
+        <div className="chat-header-right" style={{ display: 'flex', alignItems: 'center' }}>
           <button className="icon-btn" title="Video call" onClick={() => onStartCall(true)}><MdVideocam size={24} /></button>
           <button className="icon-btn" title="Voice call" onClick={() => onStartCall(false)}><MdCall size={20} /></button>
           <div className="vertical-divider"></div>
-          <button className="icon-btn" title="Menu" onClick={() => selectedUser.isGroup && setShowGroupInfo(true)}><MdMoreVert size={24} /></button>
+          <button className="icon-btn" title="Search"><MdSearch size={22} /></button>
+          {selectedUser.isGroup && (
+             <button className="icon-btn" onClick={() => setShowGroupInfo(true)} title="Group Info">
+               <MdGroup size={22} />
+             </button>
+          )}
+          <div style={{ position: 'relative' }}>
+             <button className="icon-btn" onClick={() => setShowMenu(!showMenu)} title="Menu"><MdMoreVert size={22} /></button>
+             {showMenu && (
+               <div style={{ position: 'absolute', top: 40, right: 0, backgroundColor: 'var(--bg-color-main)', border: '1px solid var(--border-color)', borderRadius: 5, boxShadow: '0 2px 5px rgba(0,0,0,0.2)', zIndex: 100, minWidth: 180, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <button onClick={() => wallpaperInputRef.current?.click()} style={{ padding: '12px 20px', textAlign: 'left', background: 'transparent', border: 'none', color: 'var(--text-color-primary)', cursor: 'pointer', fontSize: 14 }}>Change Wallpaper</button>
+                  {chatWallpaper && <button onClick={handleRemoveWallpaper} style={{ padding: '12px 20px', textAlign: 'left', background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: 14 }}>Remove Wallpaper</button>}
+                  <div style={{ height: 1, backgroundColor: 'var(--border-color)', margin: '5px 0' }} />
+                  <button onClick={() => { onUserAction(selectedUser._id, 'archive', !selectedUser.isArchived); setShowMenu(false); }} style={{ padding: '12px 20px', textAlign: 'left', background: 'transparent', border: 'none', color: 'var(--text-color-primary)', cursor: 'pointer', fontSize: 14 }}>{selectedUser.isArchived ? 'Unarchive Chat' : 'Archive Chat'}</button>
+                  <button onClick={() => { onUserAction(selectedUser._id, 'mute', !selectedUser.isMuted); setShowMenu(false); }} style={{ padding: '12px 20px', textAlign: 'left', background: 'transparent', border: 'none', color: 'var(--text-color-primary)', cursor: 'pointer', fontSize: 14 }}>{selectedUser.isMuted ? 'Unmute Notifications' : 'Mute Notifications'}</button>
+                  <button onClick={() => { onClearChat(selectedUser._id); setShowMenu(false); }} style={{ padding: '12px 20px', textAlign: 'left', background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: 14 }}>Delete Chat</button>
+                  {!selectedUser.isGroup && (
+                    <button onClick={() => { onUserAction(selectedUser._id, 'block', !selectedUser.isBlocked); setShowMenu(false); }} style={{ padding: '12px 20px', textAlign: 'left', background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', fontSize: 14 }}>{selectedUser.isBlocked ? 'Unblock Contact' : 'Block Contact'}</button>
+                  )}
+               </div>
+             )}
+          </div>
+          <input type="file" ref={wallpaperInputRef} style={{display: 'none'}} accept="image/*" onChange={handleWallpaperSelected} />
         </div>
       </div>
       
@@ -210,12 +296,36 @@ const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnli
         </div>
       )}
 
-      <div className="messages-container">
+      <div 
+        className="messages-container"
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        style={chatWallpaper ? { backgroundImage: `url(${chatWallpaper})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' } : {}}
+      >
         {chatMessages.map((msg, index) => {
           const isOwn = msg.senderId === currentUser._id;
           const senderUser = selectedUser.isGroup && !isOwn ? users?.find(u => u._id === msg.senderId) : null;
+          
+          const msgDate = new Date(msg.timestamp || msg.createdAt);
+          const prevMsg = index > 0 ? chatMessages[index - 1] : null;
+          const prevDate = prevMsg ? new Date(prevMsg.timestamp || prevMsg.createdAt) : null;
+          const showDateDivider = !prevDate || !isSameDay(msgDate, prevDate);
+          
+          let dateText = '';
+          if (showDateDivider) {
+            if (isToday(msgDate)) dateText = 'Today';
+            else if (isYesterday(msgDate)) dateText = 'Yesterday';
+            else dateText = format(msgDate, 'dd/MM/yyyy');
+          }
+
           return (
-            <div key={index} className={`message-wrapper ${isOwn ? 'own' : 'other'}`}>
+            <React.Fragment key={index}>
+              {showDateDivider && (
+                <div className="date-divider-wrapper">
+                  <span className="date-divider">{dateText}</span>
+                </div>
+              )}
+              <div className={`message-wrapper ${isOwn ? 'own' : 'other'}`}>
               <div className="message-bubble">
                 {selectedUser.isGroup && !isOwn && senderUser && (
                   <span style={{color: 'var(--accent-color)', fontSize: '13px', fontWeight: 'bold', paddingBottom: '4px'}}>{senderUser.username}</span>
@@ -252,19 +362,49 @@ const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, isOnli
                 )}
               </div>
             </div>
+          </React.Fragment>
           );
         })}
         <div ref={messagesEndRef} />
       </div>
 
+      {showScrollButton && (
+        <button 
+          className="scroll-bottom-btn" 
+          onClick={scrollToBottom}
+          aria-label="Scroll to bottom"
+        >
+          <MdKeyboardArrowDown size={26} />
+        </button>
+      )}
+
       {showEmojiPicker && (
         <div className="emoji-picker-wrapper">
-          <EmojiPicker onEmojiClick={onEmojiClick} theme="dark" width="100%" height={350} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 15px', backgroundColor: emojiTheme === 'dark' ? '#202c33' : '#f0f2f5', borderBottom: '1px solid var(--border-color)' }}>
+            <span style={{ color: emojiTheme === 'dark' ? '#e9edef' : '#54656f', fontSize: '14px', fontWeight: '500' }}>Emoji Keyboard</span>
+            <button 
+              className="icon-btn" 
+              onClick={() => {
+                const newTheme = emojiTheme === 'dark' ? 'light' : 'dark';
+                setEmojiTheme(newTheme);
+                localStorage.setItem('whatsapp_emoji_theme', newTheme);
+              }}
+              title={`Switch to ${emojiTheme === 'dark' ? 'Light' : 'Dark'} Theme`}
+              style={{ padding: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
+              {emojiTheme === 'dark' ? <MdBrightness7 size={20} color="#e9edef" /> : <MdBrightness4 size={20} color="#54656f" />}
+            </button>
+          </div>
+          <EmojiPicker onEmojiClick={onEmojiClick} theme={emojiTheme} width="100%" height={350} />
         </div>
       )}
 
       <div className="chat-input-container">
-        {!isRecording ? (
+        {selectedUser.isBlocked ? (
+           <div style={{ width: '100%', textAlign: 'center', padding: '15px', color: 'var(--text-color-secondary)' }}>
+              You blocked this contact. <span style={{ color: 'var(--accent-color)', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => onUserAction(selectedUser._id, 'block', false)}>Tap to unblock.</span>
+           </div>
+        ) : !isRecording ? (
           <>
             <input 
               type="file" 

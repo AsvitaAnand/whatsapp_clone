@@ -51,6 +51,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Sender and receiver are required' });
     }
 
+    const sender = await User.findById(senderId);
+    const receiver = await User.findById(receiverId);
+
+    if (sender && sender.blockedUsers && sender.blockedUsers.includes(receiverId)) {
+      return res.status(403).json({ error: 'You blocked this contact. Unblock to send messages.' });
+    }
+    if (receiver && receiver.blockedUsers && receiver.blockedUsers.includes(senderId)) {
+      return res.status(403).json({ error: 'You have been blocked by this user.' });
+    }
+
     const newMessage = new Message({
       senderId,
       receiverId,
@@ -69,5 +79,22 @@ router.post('/', async (req, res) => {
 });
 
 
+
+// Delete chat conversation
+router.delete('/:userId1/:userId2', async (req, res) => {
+  try {
+    const { userId1, userId2 } = req.params;
+    const query = {
+      $or: [
+        { senderId: userId1, receiverId: userId2 },
+        { senderId: userId2, receiverId: userId1 },
+      ],
+    };
+    await Message.deleteMany(query);
+    res.status(200).json({ message: 'Chat deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;

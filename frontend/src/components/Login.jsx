@@ -4,38 +4,58 @@ import { MdMonitor, MdMoreVert, MdSettings } from 'react-icons/md';
 import { FaWhatsapp } from 'react-icons/fa';
 
 const sampleUsers = [
-  { username: 'Alice', email: 'alice@test.com' },
-  { username: 'Bob', email: 'bob@test.com' },
-  { username: 'Charlie', email: 'charlie@test.com' },
-  { username: 'Dave', email: 'dave@test.com' }
+  { username: 'Alice', email: 'alice@test.com', password: 'password123' },
+  { username: 'Bob', email: 'bob@test.com', password: 'password123' },
+  { username: 'Charlie', email: 'charlie@test.com', password: 'password123' },
+  { username: 'Dave', email: 'dave@test.com', password: 'password123' }
 ];
 
 const Login = ({ onLogin }) => {
   const [showModal, setShowModal] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const loginProcess = async (username) => {
+  const loginProcess = async (emailToLogin, passwordToLogin) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { username });
+      const res = await axios.post('http://localhost:5000/api/auth/login', { 
+        email: emailToLogin, 
+        password: passwordToLogin 
+      });
       onLogin(res.data);
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (email) {
-      // Create user simply by taking the email prefix to match our simplistic backend model
-      const username = email.split('@')[0];
-      loginProcess(username);
+  const registerProcess = async () => {
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/register', {
+        username,
+        email,
+        password
+      });
+      setIsRegistering(false);
+      setError('');
+      alert('Registration successful! Please sign in.');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Registration failed');
     }
   };
 
-  const handleSampleLogin = (username) => {
-    loginProcess(username);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isRegistering) {
+      registerProcess();
+    } else if (email && password) {
+      loginProcess(email, password);
+    }
+  };
+
+  const handleSampleLogin = (user) => {
+    loginProcess(user.email, user.password);
   };
 
   return (
@@ -97,7 +117,7 @@ const Login = ({ onLogin }) => {
             
             <div className="sample-users-grid">
               {sampleUsers.map(u => (
-                <button key={u.username} type="button" onClick={() => handleSampleLogin(u.username)}>
+                <button key={u.username} type="button" onClick={() => handleSampleLogin(u)}>
                   Login as {u.username}
                 </button>
               ))}
@@ -105,7 +125,33 @@ const Login = ({ onLogin }) => {
 
             <div className="divider"><span>OR ENTER DETAILS</span></div>
 
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px', gap: '10px' }}>
+              <button 
+                type="button" 
+                style={{ padding: '8px 16px', background: !isRegistering ? '#00a884' : '#f0f2f5', color: !isRegistering ? '#fff' : '#41525d', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}
+                onClick={() => { setIsRegistering(false); setError(''); }}
+              >
+                Sign In
+              </button>
+              <button 
+                type="button" 
+                style={{ padding: '8px 16px', background: isRegistering ? '#00a884' : '#f0f2f5', color: isRegistering ? '#fff' : '#41525d', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: '500' }}
+                onClick={() => { setIsRegistering(true); setError(''); }}
+              >
+                Register
+              </button>
+            </div>
+
             <form onSubmit={handleSubmit} className="manual-login-form">
+              {isRegistering && (
+                <input 
+                  type="text" 
+                  placeholder="Username" 
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  required={isRegistering}
+                />
+              )}
               <input 
                 type="email" 
                 placeholder="Email address" 
@@ -120,7 +166,7 @@ const Login = ({ onLogin }) => {
                 onChange={e => setPassword(e.target.value)}
                 required
               />
-              <button type="submit">Sign In</button>
+              <button type="submit">{isRegistering ? 'Register' : 'Sign In'}</button>
             </form>
             {error && <p className="error-text">{error}</p>}
             

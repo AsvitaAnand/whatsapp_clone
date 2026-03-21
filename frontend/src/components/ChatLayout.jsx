@@ -6,6 +6,10 @@ import ChatWindow from './ChatWindow';
 import Sidebar from './Sidebar';
 import CallModal from './CallModal';
 import CallsTab from './CallsTab';
+import StatusSidebar from './StatusSidebar';
+import StatusViewer from './StatusViewer';
+import CommunitiesSidebar from './CommunitiesSidebar';
+import MetaAIChat from './MetaAIChat';
 
 const SOCKET_URL = 'http://localhost:5000';
 const API_URL = 'http://localhost:5000/api';
@@ -18,6 +22,8 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
   const [callState, setCallState] = useState({ status: 'idle' });
   const [activeTab, setActiveTab] = useState('chats');
   const [showSidebarSettings, setShowSidebarSettings] = useState(false);
+  const [selectedStatusUser, setSelectedStatusUser] = useState(null);
+  const [statusRefreshTrigger, setStatusRefreshTrigger] = useState(0);
   const socketRef = useRef(null);
   const [socketConnection, setSocketConnection] = useState(null);
   const selectedUserRef = useRef(null);
@@ -36,6 +42,27 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
 
     socketRef.current.on('receive_message', (message) => {
       setMessages((prev) => [...prev, message]);
+      
+      setUsers((prevUsers) => {
+        const isGroup = prevUsers.find(u => u._id === message.receiverId && u.isGroup);
+        const contactId = isGroup ? message.receiverId : message.senderId;
+        
+        const idx = prevUsers.findIndex(u => u._id === contactId);
+        if (idx !== -1) {
+          const updatedUser = { ...prevUsers[idx] };
+          updatedUser.lastMessage = message;
+          if (selectedUserRef.current && selectedUserRef.current._id === contactId) {
+            // currently open
+          } else {
+            updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
+          }
+          const nextUsers = [...prevUsers];
+          nextUsers.splice(idx, 1);
+          nextUsers.unshift(updatedUser);
+          return nextUsers;
+        }
+        return prevUsers;
+      });
       
       if (selectedUserRef.current && selectedUserRef.current._id === message.senderId) {
         socketRef.current.emit('mark_read', { messageIds: [message._id], senderId: message.senderId });
@@ -56,16 +83,19 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
       setOnlineUsers(users);
     });
 
+    socketRef.current.on('user_offline', ({ userId, lastSeen }) => {
+      setUsers(prev => prev.map(u => String(u._id) === String(userId) ? { ...u, lastSeen } : u));
+    });
+
     return () => {
       socketRef.current.disconnect();
     };
   }, [currentUser]);
 
-  // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get(`${API_URL}/users?currentUserId=${currentUser._id}`);
+        const res = await axios.get(`${API_URL}/users/conversations/${currentUser._id}`);
         setUsers(res.data);
       } catch (err) {
         console.error('Failed to fetch users', err);
@@ -90,6 +120,12 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
           socketRef.current.emit('mark_read', { messageIds: unreadIds, senderId: selectedUser._id });
           setMessages(prev => prev.map(m => unreadIds.includes(m._id) ? { ...m, status: 'read' } : m));
         }
+
+        // Clear the unread badge in the sidebar when the chat is opened
+        setUsers(prevUsers => prevUsers.map(u => 
+          u._id === selectedUser._id ? { ...u, unreadCount: 0 } : u
+        ));
+
       } catch (err) {
         console.error('Failed to fetch messages', err);
       }
@@ -116,6 +152,18 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
       const tempId = Date.now().toString();
       setMessages((prev) => [...prev, { ...messageData, _id: tempId }]);
 
+      setUsers((prevUsers) => {
+        const idx = prevUsers.findIndex(u => u._id === selectedUser._id);
+        if (idx !== -1) {
+          const updatedUser = { ...prevUsers[idx], lastMessage: messageData, unreadCount: 0 };
+          const nextUsers = [...prevUsers];
+          nextUsers.splice(idx, 1);
+          nextUsers.unshift(updatedUser);
+          return nextUsers;
+        }
+        return prevUsers;
+      });
+
       const res = await axios.post(`${API_URL}/messages`, messageData);
       
       setMessages((prev) => prev.map(m => m._id === tempId ? res.data : m));
@@ -123,6 +171,37 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
     } catch (err) {
       console.error('Failed to send message', err);
     }
+  };
+
+  const handleUserAction = async (contactId, action, value) => {
+    try {
+      await axios.post(`${API_URL}/users/action`, {
+        userId: currentUser._id,
+        contactId,
+        action,
+        value
+      });
+      setUsers(prev => prev.map(u => {
+        if (u._id === contactId) {
+          const key = action === 'archive' ? 'isArchived' : action === 'block' ? 'isBlocked' : 'isMuted';
+          return { ...u, [key]: value };
+        }
+        return u;
+      }));
+    } catch (err) { console.error(err); }
+  };
+
+  const handleClearChat = async (contactId) => {
+    try {
+      await axios.delete(`${API_URL}/messages/${currentUser._id}/${contactId}`);
+      setMessages([]);
+      setUsers(prev => prev.map(u => {
+        if (u._id === contactId) {
+          return { ...u, lastMessage: null };
+        }
+        return u;
+      }));
+    } catch (err) { console.error(err); }
   };
 
   return (
@@ -140,6 +219,7 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onOpenSettings={() => setShowSidebarSettings(true)}
+          unreadCount={users.reduce((acc, curr) => acc + (curr.unreadCount || 0), 0)}
         />
         <div className="chat-sidebar-container">
           {activeTab === 'chats' ? (
@@ -161,6 +241,19 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
               users={users} 
               onStartCall={(targetId, isVideo) => setCallState({ status: 'calling', target: targetId, isVideo, from: currentUser._id })} 
             />
+          ) : activeTab === 'communities' ? (
+            <CommunitiesSidebar />
+          ) : activeTab === 'meta-ai' ? (
+            <div className="sidebar" style={{ backgroundColor: 'var(--bg-color-main)' }}>
+              <div className="sidebar-header" style={{ padding: '20px 16px' }}><h2 style={{color: 'var(--text-color-primary)', margin: 0}}>Meta AI</h2></div>
+              <div style={{ padding: '20px', color: 'var(--text-color-secondary)' }}>You are chatting with a simulated AI bot.</div>
+            </div>
+          ) : activeTab === 'status' ? (
+            <StatusSidebar 
+              currentUser={currentUser} 
+              onSelectStatusUser={setSelectedStatusUser}
+              refreshTrigger={statusRefreshTrigger}
+            />
           ) : (
             <div className="sidebar" style={{ backgroundColor: 'var(--bg-color-main)' }}>
               <div className="sidebar-header" style={{ padding: '20px 16px' }}><h2 style={{color: 'var(--text-color-primary)', margin: 0}}>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h2></div>
@@ -169,14 +262,34 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
           )}
         </div>
         <div className="chat-window-container">
-          {selectedUser ? (
+          {activeTab === 'meta-ai' ? (
+             <MetaAIChat />
+          ) : activeTab === 'status' ? (
+             <StatusViewer 
+                selectedStatusUser={selectedStatusUser} 
+                currentUser={currentUser} 
+                onClose={() => setSelectedStatusUser(null)} 
+                onStatusAdded={() => setStatusRefreshTrigger(prev => prev + 1)}
+             />
+          ) : activeTab === 'communities' ? (
+            <div className="chat-empty">
+              <div className="chat-empty-content">
+                <h1>Communities</h1>
+                <p>Stay connected with your community groups and announcements.</p>
+              </div>
+            </div>
+          ) : selectedUser ? (
             <ChatWindow 
-              selectedUser={selectedUser} 
+              selectedUser={users.find(u => String(u._id) === String(selectedUser._id)) || selectedUser} 
               messages={messages} 
               currentUser={currentUser}
               onSendMessage={handleSendMessage}
               isOnline={onlineUsers.includes(selectedUser._id)}
               onStartCall={(isVideo) => setCallState({ status: 'calling', target: selectedUser._id, isVideo })}
+              users={users}
+              socket={socketConnection}
+              onUserAction={handleUserAction}
+              onClearChat={handleClearChat}
             />
           ) : (
             <div className="chat-empty">

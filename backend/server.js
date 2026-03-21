@@ -8,6 +8,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const messageRoutes = require('./routes/messages');
+const statusRoutes = require('./routes/status');
 const Message = require('./models/Message');
 const User = require('./models/User'); // Added for seeding
 
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/status', statusRoutes);
 
 // Database connection
 mongoose
@@ -98,11 +100,18 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log(`User disconnected: ${socket.id}`);
     for (let [key, value] of userSocketMap.entries()) {
       if (value === socket.id) {
         userSocketMap.delete(key);
+        try {
+          const now = new Date();
+          await User.findByIdAndUpdate(key, { lastSeen: now });
+          io.emit('user_offline', { userId: key, lastSeen: now });
+        } catch (err) {
+          console.error(err);
+        }
         broadcastOnlineUsers();
         break;
       }
