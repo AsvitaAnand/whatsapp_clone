@@ -1,5 +1,4 @@
-import React from 'react';
-import { MdMessage, MdCall, MdDonutLarge, MdPeople, MdStarBorder, MdArchive, MdSettings, MdPerson } from 'react-icons/md';
+import { MdMessage, MdCall, MdDonutLarge, MdPeople, MdSettings, MdPerson } from 'react-icons/md';
 
 const NavRail = ({ currentUser, activeTab, onTabChange, onOpenSettings, unreadCount }) => {
   return (
@@ -49,12 +48,6 @@ const NavRail = ({ currentUser, activeTab, onTabChange, onOpenSettings, unreadCo
       </div>
 
       <div className="nav-rail-bottom">
-        <button className="rail-icon-btn" title="Starred messages">
-          <MdStarBorder size={24} />
-        </button>
-        <button className="rail-icon-btn" title="Archived">
-          <MdArchive size={24} />
-        </button>
         <button className="rail-icon-btn" title="Settings" onClick={onOpenSettings}>
           <MdSettings size={24} />
         </button>

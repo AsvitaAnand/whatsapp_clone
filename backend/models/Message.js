@@ -36,6 +36,22 @@ const messageSchema = new mongoose.Schema({
     type: String,
     enum: ['sent', 'delivered', 'read'],
     default: 'sent'
+  },
+  reactions: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    emoji: String
+  }],
+  isEdited: {
+    type: Boolean,
+    default: false
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
+  },
+  replyTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Message'
   }
 }, { timestamps: true });
 

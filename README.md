@@ -1,92 +1,82 @@
-# WhatsApp Web Clone
+# WhatsApp Web Clone (MERN + Socket.IO)
 
-A full-stack, real-time WhatsApp Web clone built with the MERN stack (MongoDB, Express, React, Node.js) and Socket.io. This project features a modern responsive UI (including the new WhatsApp vertical navigation rail) and replicates many core features of the actual WhatsApp application.
+A full-stack, real-time WhatsApp Web clone built using MongoDB, Express.js, React.js, Node.js, and Socket.IO.
 
-## 🌟 Features
+## Features Supported
+- **Real-time Messaging**: Instant messaging utilizing Socket.IO for seamless 1-on-1 and Group chats.
+- **Message Management**: Start, reply, edit, and delete messages (for everyone).
+- **Message Reactions**: React to messages using an emoji tray, updated in real-time.
+- **Group Chats**: Create groups, manage group info, add/remove members (Admin only).
+- **Typing Indicators**: Real-time "typing..." status for both individual and group chats.
+- **Media & File Sharing**: Send images and files with integrated download links.
+- **Voice Messaging**: Record and send voice notes directly from the chat interface.
+- **WebRTC Calling**: Real-time Voice and Video calls with ringing UI, offline detection, and active call toggles.
+- **Chat Management**: Archive, mute, block, and delete conversations.
+- **Modern UI/UX**: Pixel-perfect adherence to the newest WhatsApp Web design, including the left Navigation Rail, animated emoji pickers, custom wallpapers, and floating scroll-to-bottom buttons.
+- **Read Receipts**: Real-time tracking of sent, delivered, and read status (single and double ticks).
+- **Simulated Meta AI & Communities**: UI foundations laid for AI bot chats and community announcements.
 
-- **Real-Time Messaging:** Instant message delivery using Socket.io.
-- **Group Chats:** Create groups, view members, and chat with multiple people.
-- **Media & File Sharing:** Send images, documents, and other files easily.
-- **Voice Messages:** Built-in microphone recording to send voice notes.
-- **Status Updates:** Share text or image statuses that automatically disappear after 24 hours.
-- **Online & Last Seen:** See when your contacts are online or when they were last active.
-- **Message Status Indicators:** Real-time ticks for Sent, Delivered, and Read receipts.
-- **Chat Management:** Archive, mute, block, and delete chats just like the real app.
-- **Customization options:** 
-  - Change chat wallpapers for individual contacts.
-  - Light/Dark theme toggle for the Emoji Keyboard.
-- **Meta AI Chat:** A simulated AI bot chat feature.
-- **Modern UI:** Features the sleek new left-side vertical Navigation Rail to switch between Chats, Status, Communities, Calls, and Meta AI.
+## Prerequisites
+Before running this project, ensure you have the following installed on your machine:
+- [Node.js](https://nodejs.org/) (v16 or higher)
+- [MongoDB](https://www.mongodb.com/) (running locally or a MongoDB Atlas URI)
+- Git
 
----
+## Installation & Setup
 
-## 🚀 Getting Started
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repository-url>
+   cd whastup_clone
+   ```
 
-Follow these instructions to get a copy of the project up and running on your local machine.
+2. **Setup the Backend:**
+   Open a terminal and navigate to the backend directory:
+   ```bash
+   cd backend
+   npm install
+   ```
+   Create a `.env` file inside the `backend` folder (if it doesn't exist):
+   ```env
+   PORT=5000
+   MONGO_URI=mongodb://127.0.0.1:27017/whatsapp-clone
+   ```
+   Start the backend server:
+   ```bash
+   npm run dev 
+   # OR
+   node server.js
+   ```
+   *(Note: Using `nodemon` or `npm run dev` is highly recommended for development to auto-reload on changes).*
 
-### Prerequisites
-Make sure you have the following installed on your system:
-- [Node.js](https://nodejs.org/en/download/) (v16 or higher recommended)
-- [MongoDB](https://www.mongodb.com/try/download/community) (running locally, or use a MongoDB Atlas cluster)
-- Git (if cloning from the repository)
+3. **Setup the Frontend:**
+   Open a new terminal window:
+   ```bash
+   cd frontend
+   npm install
+   ```
+   Start the React development server:
+   ```bash
+   npm run dev
+   ```
 
-### Installation
+## How to Login (Testing Accounts)
 
-#### 1. Get the Code
-You can either clone the repository using Git or download it as a ZIP file.
+The backend automatically seeds test accounts on the first run. There is no complex password hashing for demonstration purposes, making it easy to test interactions between multiple users simultaneously in different incognito tabs.
 
-**Option A - Clone via Git:**
-```bash
-git clone https://github.com/AsvitaAnand/whatsapp_clone.git
-cd whatsapp_clone
-```
+Use any of the following accounts:
+- **Email:** `arjun@test.com` | **Password:** `password123`
+- **Email:** `asvita@test.com` | **Password:** `password123`
+- **Email:** `megharaj@test.com`| **Password:** `password123`
+- **Email:** `margani@test.com` | **Password:** `password123`
+- **Email:** `nandini@test.com` | **Password:** `password123`
+- **Email:** `alice@test.com`   | **Password:** `password123`
+- **Email:** `bob@test.com`     | **Password:** `password123`
 
-**Option B - Download as ZIP:**
-- Click the green **Code** button at the top right of this page and select **Download ZIP**.
-- Extract the ZIP file and open the extracted folder in your terminal.
+## Technical Architecture & Logic
 
-#### 2. Setup the Backend
-Open a terminal and navigate to the backend directory:
-```bash
-cd backend
-```
-Install backend dependencies:
-```bash
-npm install
-```
-Start the backend server:
-```bash
-node server.js
-# Or use 'npm run dev' if nodemon is configured
-```
-*(The backend should now be running on port 5000 and connected to MongoDB).*
-
-#### 3. Setup the Frontend
-Open a **new** terminal window and navigate to the frontend directory:
-```bash
-cd frontend
-```
-Install frontend dependencies:
-```bash
-npm install
-```
-Start the frontend Vite development server:
-```bash
-npm run dev
-```
-
-### 4. Open the App
-Once both servers are running, open your browser and navigate to the URL provided by the Vite server (usually `http://localhost:5173`).
-
----
-
-## 🛠️ Built With
-
-- **Frontend:** React.js, Vite, CSS, React Icons, Emoji-Picker-React
-- **Backend:** Node.js, Express.js
-- **Database:** MongoDB, Mongoose
-- **Real-time Engine:** Socket.io
-- **Utilities:** date-fns, axios
-
-## 📄 License
-This project is open-source and available under the MIT License.
+- **Database (MongoDB)**: Stores Users, Messages, and Status updates. The `Message` schema includes fields for `reactions`, `isEdited`, `isDeleted`, and `replyTo`.
+- **Backend (Express + Node)**: Provides REST API endpoints for initial data fetching (chat history, user list, group management).
+- **Real-Time (Socket.IO)**: Sits on top of the Express server. Handles live broadcasting of `send_message`, `edit_message`, `delete_message`, `react_message`, `typing`, and message read receipts (`mark_read`, `mark_delivered`). Events are securely routed using a `userSocketMap` that links MongoDB user IDs to active Socket IDs.
+- **Frontend (React)**: Component-based architecture. State synchronization is carefully managed: when the user performs an action (e.g., editing a message), an API call is made, local React state is eagerly updated to ensure zero-latency UI feedback, and a Socket event is emitted to synchronize the receiver's screen.
+- **WebRTC**: Used for Peer-to-Peer Voice and Video calling, coordinated via signaling events over Socket.IO (`webrtc_offer`, `webrtc_answer`, `webrtc_ice_candidate`).

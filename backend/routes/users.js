@@ -56,6 +56,30 @@ router.post('/group', async (req, res) => {
   }
 });
 
+// Add or remove member from group
+router.put('/group/:groupId', async (req, res) => {
+  try {
+    const { action, userId, adminId } = req.body;
+    const group = await User.findById(req.params.groupId);
+    if (!group || !group.isGroup) return res.status(404).json({ error: 'Group not found' });
+    
+    if (String(group.groupAdmin) !== String(adminId)) {
+      return res.status(403).json({ error: 'Only admin can modify members' });
+    }
+
+    if (action === 'add') {
+      if (!group.members.includes(userId)) group.members.push(userId);
+    } else if (action === 'remove') {
+      group.members = group.members.filter(id => String(id) !== String(userId));
+    }
+
+    await group.save();
+    res.status(200).json(group);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Update user profile picture
 router.put('/:id', async (req, res) => {
   try {

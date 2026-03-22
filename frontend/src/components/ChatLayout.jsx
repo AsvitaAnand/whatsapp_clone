@@ -32,6 +32,15 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
     selectedUserRef.current = selectedUser;
   }, [selectedUser]);
 
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+    const handleFocus = () => { document.title = 'WhatsApp Clone'; };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   // Initialize socket
   useEffect(() => {
     socketRef.current = io(SOCKET_URL);
@@ -55,6 +64,14 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
             // currently open
           } else {
             updatedUser.unreadCount = (updatedUser.unreadCount || 0) + 1;
+            if (document.hidden) {
+              document.title = `(${updatedUser.unreadCount}) New Message`;
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(users.find(u => u._id === contactId)?.username || 'New Message', { 
+                  body: message.type === 'text' ? message.text : `[${message.type}]` 
+                });
+              }
+            }
           }
           const nextUsers = [...prevUsers];
           nextUsers.splice(idx, 1);
@@ -81,6 +98,18 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
 
     socketRef.current.on('online_users', (users) => {
       setOnlineUsers(users);
+    });
+
+    socketRef.current.on('message_edited', (updatedMessage) => {
+      setMessages(prev => prev.map(m => m._id === updatedMessage._id ? updatedMessage : m));
+    });
+
+    socketRef.current.on('message_deleted', (updatedMessage) => {
+      setMessages(prev => prev.map(m => m._id === updatedMessage._id ? updatedMessage : m));
+    });
+
+    socketRef.current.on('message_reacted', (updatedMessage) => {
+      setMessages(prev => prev.map(m => m._id === updatedMessage._id ? updatedMessage : m));
     });
 
     socketRef.current.on('user_offline', ({ userId, lastSeen }) => {
@@ -133,7 +162,7 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
     fetchMessages();
   }, [currentUser, selectedUser]);
 
-  const handleSendMessage = async (text, type = 'text', audioData = '', fileData = '', fileName = '') => {
+  const handleSendMessage = async (text, type = 'text', audioData = '', fileData = '', fileName = '', replyTo = null) => {
     if (!selectedUser) return;
 
     const messageData = {
@@ -144,6 +173,7 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
       audioData,
       fileData,
       fileName,
+      replyTo,
       timestamp: new Date().toISOString(),
       status: 'sent'
     };
@@ -202,6 +232,10 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
         return u;
       }));
     } catch (err) { console.error(err); }
+  };
+
+  const handleUpdateMessage = (updatedMessage) => {
+    setMessages(prev => prev.map(m => m._id === updatedMessage._id ? updatedMessage : m));
   };
 
   return (
@@ -284,6 +318,7 @@ const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
               messages={messages} 
               currentUser={currentUser}
               onSendMessage={handleSendMessage}
+              onUpdateMessage={handleUpdateMessage}
               isOnline={onlineUsers.includes(selectedUser._id)}
               onStartCall={(isVideo) => setCallState({ status: 'calling', target: selectedUser._id, isVideo })}
               users={users}

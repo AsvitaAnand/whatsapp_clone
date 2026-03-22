@@ -34,7 +34,9 @@ router.get('/:userId1/:userId2', async (req, res) => {
       };
     }
 
-    const messages = await Message.find(query).sort({ createdAt: 1 });
+    const messages = await Message.find(query)
+      .sort({ createdAt: 1 })
+      .populate('replyTo');
 
     res.status(200).json(messages);
   } catch (error) {
@@ -45,7 +47,7 @@ router.get('/:userId1/:userId2', async (req, res) => {
 // Send a message via REST (Socket.IO will also handle real-time)
 router.post('/', async (req, res) => {
   try {
-    const { senderId, receiverId, text, type, audioData, fileData, fileName } = req.body;
+    const { senderId, receiverId, text, type, audioData, fileData, fileName, replyTo } = req.body;
     
     if (!senderId || !receiverId) {
       return res.status(400).json({ error: 'Sender and receiver are required' });
@@ -68,7 +70,8 @@ router.post('/', async (req, res) => {
       type: type || 'text',
       audioData: audioData || '',
       fileData: fileData || '',
-      fileName: fileName || ''
+      fileName: fileName || '',
+      replyTo: replyTo || null
     });
 
     const savedMessage = await newMessage.save();
@@ -92,6 +95,70 @@ router.delete('/:userId1/:userId2', async (req, res) => {
     };
     await Message.deleteMany(query);
     res.status(200).json({ message: 'Chat deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Edit a message
+router.put('/:messageId', async (req, res) => {
+  try {
+    const { text } = req.body;
+    const message = await Message.findById(req.params.messageId);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    
+    message.text = text;
+    message.isEdited = true;
+    const updatedMessage = await message.save();
+    res.status(200).json(updatedMessage);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete a single message for everyone
+router.delete('/:messageId', async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.messageId);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    
+    message.text = '🚫 This message was deleted';
+    message.isDeleted = true;
+    message.fileData = '';
+    message.audioData = '';
+    message.type = 'text';
+
+    const updatedMessage = await message.save();
+    res.status(200).json(updatedMessage);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Toggle reaction on a message
+router.put('/react/:messageId', async (req, res) => {
+  try {
+    const { userId, emoji } = req.body;
+    const message = await Message.findById(req.params.messageId);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+
+    const existingReactionIndex = message.reactions.findIndex(r => String(r.user) === String(userId));
+    
+    if (existingReactionIndex > -1) {
+      if (message.reactions[existingReactionIndex].emoji === emoji) {
+        // Toggle off if same emoji
+        message.reactions.splice(existingReactionIndex, 1);
+      } else {
+        // Change emoji
+        message.reactions[existingReactionIndex].emoji = emoji;
+      }
+    } else {
+      // Add new
+      message.reactions.push({ user: userId, emoji });
+    }
+
+    const updatedMessage = await message.save();
+    res.status(200).json(updatedMessage);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

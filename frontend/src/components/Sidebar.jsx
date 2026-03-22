@@ -110,7 +110,14 @@ const Sidebar = ({ users, currentUser, selectedUser, onSelectUser, onLogout, onl
   }
 
   const handleCreateGroup = async () => {
-    if (!groupName.trim()) return;
+    if (!groupName.trim()) {
+      alert('Please enter a group subject');
+      return;
+    }
+    if (selectedMembers.length === 0) {
+      alert('Please select at least one member');
+      return;
+    }
     try {
       await axios.post('http://localhost:5000/api/users/group', {
         name: groupName,
@@ -121,6 +128,7 @@ const Sidebar = ({ users, currentUser, selectedUser, onSelectUser, onLogout, onl
       window.location.reload(); // Refresh to catch new chat layout logic
     } catch(err) {
       console.error(err);
+      alert('Error creating group: ' + (err.response?.data?.error || err.message));
     }
   };
 

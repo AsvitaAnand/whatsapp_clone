@@ -142,10 +142,40 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Message actions
+  const broadcastAction = async (event, data) => {
+    try {
+      const receiver = await User.findById(data.receiverId);
+      if (receiver && receiver.isGroup) {
+        receiver.members.forEach(memberId => {
+          const memberSocketId = userSocketMap.get(memberId.toString());
+          if (memberSocketId && memberSocketId !== socket.id) {
+            io.to(memberSocketId).emit(event, data);
+          }
+        });
+      } else {
+        const receiverSocketId = userSocketMap.get(data.receiverId);
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit(event, data);
+        }
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  socket.on('edit_message', (data) => broadcastAction('message_edited', data));
+  socket.on('delete_message', (data) => broadcastAction('message_deleted', data));
+  socket.on('react_message', (data) => broadcastAction('message_reacted', data));
+  socket.on('typing', (data) => broadcastAction('typing', data));
+  socket.on('stop_typing', (data) => broadcastAction('stop_typing', data));
+
   // WebRTC Signals
   socket.on('webrtc_offer', (data) => {
     const receiverId = userSocketMap.get(data.target);
-    if(receiverId) io.to(receiverId).emit('webrtc_offer', data);
+    if(receiverId) {
+      io.to(receiverId).emit('webrtc_offer', data);
+    } else {
+      socket.emit('call_ended', { target: data.target, reason: 'offline' });
+    }
   });
   
   socket.on('webrtc_answer', (data) => {

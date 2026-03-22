@@ -1,0 +1,70 @@
+[
+  {
+    "username": "TestGroup"
+  },
+  {
+    "username": "Friends Forever"
+  },
+  {
+    "username": "Office group"
+  },
+  {
+    "username": "Asvita",
+    "email": "asvita@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Megharaj",
+    "email": "megharaj@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Nandini",
+    "email": "nandini@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Margani",
+    "email": "margani@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Krithik",
+    "email": "krithik@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Arjun",
+    "email": "arjun@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Alice",
+    "email": "alice@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Bob",
+    "email": "bob@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Charlie",
+    "email": "charlie@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Dave",
+    "email": "dave@test.com",
+    "password": "password123"
+  },
+  {
+    "username": "Test Group"
+  },
+  {
+    "username": "Test Group 4708"
+  },
+  {
+    "username": "Office group 0230"
+  }
+]

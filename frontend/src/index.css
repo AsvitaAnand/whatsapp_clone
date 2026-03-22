@@ -799,6 +799,27 @@ body {
   gap: 4px; /* Reduced gap representing connected messages */
 }
 
+.scroll-bottom-btn {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: var(--bg-color-panel);
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.16), 0 2px 5px rgba(0,0,0,.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: transform 0.2s;
+}
+.scroll-bottom-btn:hover {
+  transform: translateY(-2px);
+}
+
 .date-divider-wrapper {
   display: flex;
   justify-content: center;
@@ -895,7 +916,7 @@ body {
 
 
 .chat-input-container {
-  height: 62px;
+  min-height: 62px;
   background-color: var(--bg-color-panel);
   display: flex;
   align-items: center;
@@ -1027,6 +1048,8 @@ body {
   display: flex;
   flex-direction: column;
   background-color: var(--bg-color-main);
+  flex: 1;
+  overflow-y: auto;
 }
 
 .profile-edit-avatar {

@@ -48,9 +48,15 @@ const CallModal = ({ socket, currentUser, callState, setCallState, users }) => {
       if (!localStream.current) initCall();
     }
 
+    let ringTimeout;
+    if (callState.status === 'calling' || callState.status === 'receiving') {
+      ringTimeout = setTimeout(() => {
+        endCall(callState.status === 'calling'); // Caller emits end call
+      }, 30000);
+    }
+
     return () => {
-      // Automatic cleanup isn't ideal here because React will unmount and remount in StrictMode sometimes,
-      // but assuming standard runtime:
+      if (ringTimeout) clearTimeout(ringTimeout);
     };
   }, [callState.status]);
 
