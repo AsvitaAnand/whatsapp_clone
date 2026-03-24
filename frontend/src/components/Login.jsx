@@ -5,7 +5,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 
 const sampleUsers = [
   { username: 'Alice', email: 'alice@test.com', password: 'password123' },
-  { username: 'Bob', email: 'bob@test.com', password: 'password123' },
+  { username: 'Boopesh', email: 'boopesh@test.com', password: 'password123' },
   { username: 'Charlie', email: 'charlie@test.com', password: 'password123' },
   { username: 'Dave', email: 'dave@test.com', password: 'password123' }
 ];

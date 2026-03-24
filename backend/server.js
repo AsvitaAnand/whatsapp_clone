@@ -36,7 +36,7 @@ mongoose
       if (userCount < 4) {
         const sampleUsers = [
           { username: 'Alice', email: 'alice@test.com', profilePic: '' },
-          { username: 'Bob', email: 'bob@test.com', profilePic: '' },
+          { username: 'Boopesh', email: 'boopesh@test.com', profilePic: '' },
           { username: 'Charlie', email: 'charlie@test.com', profilePic: '' },
           { username: 'Dave', email: 'dave@test.com', profilePic: '' }
         ];

@@ -71,7 +71,7 @@ Use any of the following accounts:
 - **Email:** `margani@test.com` | **Password:** `password123`
 - **Email:** `nandini@test.com` | **Password:** `password123`
 - **Email:** `alice@test.com`   | **Password:** `password123`
-- **Email:** `bob@test.com`     | **Password:** `password123`
+- **Email:** `boopesh@test.com` | **Password:** `password123`
 
 ## Technical Architecture & Logic
 

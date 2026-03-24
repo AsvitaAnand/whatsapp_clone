@@ -1,0 +1,24 @@
+USERS:
+- TestGroup: profilePic='' (length: 0)
+- Friends Forever: profilePic='https://images.unsplash.com/photo-1555680202-c86f0e12f086?w=150&q=80' (length: 68)
+- Office group: profilePic='https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=150&q=80' (length: 71)
+- Asvita: profilePic='https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?w=150&q=80' (length: 71)
+- Megharaj: profilePic='https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=150&q=80' (length: 68)
+
+BOBS:
+{
+  "_id": "69c025bd4909b4697ca5e6ad",
+  "username": "Bob",
+  "email": "bob@test.com",
+  "password": "password123",
+  "profilePic": "",
+  "isGroup": false,
+  "members": [],
+  "archivedChats": [],
+  "blockedUsers": [],
+  "mutedChats": [],
+  "lastSeen": "2026-03-24T05:41:05.024Z",
+  "createdAt": "2026-03-22T17:24:13.581Z",
+  "updatedAt": "2026-03-24T05:41:05.025Z",
+  "__v": 4
+}
