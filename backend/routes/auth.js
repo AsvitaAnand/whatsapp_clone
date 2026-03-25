@@ -2,8 +2,8 @@ const router = require('express').Router();
 const User = require('../models/User');
 
 // Seed sample users
-st seedSampleUsers = async () => {
-  ccononst samples = [
+const seedSampleUsers = async () => {
+  const samples = [
     { username: 'Alice', email: 'alice@test.com', password: 'password123' },
     { username: 'Boopesh', email: 'boopesh@test.com', password: 'password123' },
     { username: 'Charlie', email: 'charlie@test.com', password: 'password123' },
