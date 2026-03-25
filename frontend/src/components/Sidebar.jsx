@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { MdLogout, MdSearch, MdPerson, MdMoreVert, MdArrowBack, MdPhotoCamera, MdDonutLarge, MdMessage, MdGroupAdd, MdGroup, MdLock, MdChat, MdNotifications, MdAccountCircle, MdHelpOutline, MdArchive, MdVolumeOff } from 'react-icons/md';
 import axios from 'axios';
 import { format, isToday, isYesterday } from 'date-fns';
+import { API_URL } from '../config';
 
 const Sidebar = ({ users, currentUser, selectedUser, onSelectUser, onLogout, onlineUsers, theme, onThemeChange, showSettings, setShowSettings }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,7 +93,7 @@ const Sidebar = ({ users, currentUser, selectedUser, onSelectUser, onLogout, onl
         const base64String = reader.result;
         setProfilePic(base64String);
         try {
-          await axios.put(`http://localhost:5000/api/users/${currentUser._id}`, { profilePic: base64String });
+          await axios.put(`${API_URL}/users/${currentUser._id}`, { profilePic: base64String });
           // Update local storage
           const updatedUser = { ...currentUser, profilePic: base64String };
           localStorage.setItem('whatsapp_clone_user', JSON.stringify(updatedUser));
@@ -119,7 +120,7 @@ const Sidebar = ({ users, currentUser, selectedUser, onSelectUser, onLogout, onl
       return;
     }
     try {
-      await axios.post('http://localhost:5000/api/users/group', {
+      await axios.post(`${API_URL}/users/group`, {
         name: groupName,
         admin: currentUser._id,
         members: [...selectedMembers, currentUser._id]

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MdCall, MdVideocam, MdCallMissed, MdCallMade, MdCallReceived } from 'react-icons/md';
 import { format } from 'date-fns';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const CallsTab = ({ currentUser, users, onStartCall }) => {
   const [calls, setCalls] = useState([]);
@@ -9,7 +10,7 @@ const CallsTab = ({ currentUser, users, onStartCall }) => {
   useEffect(() => {
     const fetchCalls = async () => {
       try {
-        const url = `http://localhost:5000/api/messages/calls/${currentUser._id}`;
+        const url = `${API_URL}/messages/calls/${currentUser._id}`;
         const res = await axios.get(url);
         setCalls(res.data);
       } catch (err) {

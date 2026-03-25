@@ -15,7 +15,20 @@ const User = require('./models/User'); // Added for seeding
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors());
+// CORS configuration for production
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  process.env.FRONTEND_URL || 'http://localhost:5173'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -58,8 +71,9 @@ mongoose
 // Socket.IO logic
 const io = new Server(server, {
   cors: {
-    origin: '*', // Allow frontend to connect
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
+    credentials: true
   },
 });
 

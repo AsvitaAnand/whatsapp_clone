@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { MdAdd } from 'react-icons/md';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 const StatusSidebar = ({ currentUser, onSelectStatusUser, refreshTrigger }) => {
   const [statuses, setStatuses] = useState([]);

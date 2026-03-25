@@ -10,9 +10,7 @@ import StatusSidebar from './StatusSidebar';
 import StatusViewer from './StatusViewer';
 import CommunitiesSidebar from './CommunitiesSidebar';
 import MetaAIChat from './MetaAIChat';
-
-const SOCKET_URL = 'http://localhost:5000';
-const API_URL = 'http://localhost:5000/api';
+import { SOCKET_URL, API_URL } from '../config';
 
 const ChatLayout = ({ currentUser, onLogout, theme, onThemeChange }) => {
   const [users, setUsers] = useState([]);

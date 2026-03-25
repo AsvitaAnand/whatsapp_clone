@@ -3,8 +3,7 @@ import { MdSend, MdPerson, MdCall, MdVideocam, MdMoreVert, MdEmojiEmotions, MdAt
 import { format, isToday, isYesterday, isSameDay } from 'date-fns';
 import EmojiPicker from 'emoji-picker-react';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 const ChatWindow = ({ selectedUser, messages, currentUser, onSendMessage, onUpdateMessage, isOnline, onStartCall, users, socket, onUserAction, onClearChat }) => {
   const [inputText, setInputText] = useState('');

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MdCallEnd, MdCall, MdVideocam, MdVideocamOff, MdMic, MdMicOff } from 'react-icons/md';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 const CallModal = ({ socket, currentUser, callState, setCallState, users }) => {
   const localVideoRef = useRef();
@@ -174,7 +175,7 @@ const CallModal = ({ socket, currentUser, callState, setCallState, users }) => {
     if (emit && TARGET_USER_ID) {
       socket.emit('call_ended', { target: TARGET_USER_ID });
       try {
-        axios.post('http://localhost:5000/api/messages', {
+        axios.post(`${API_URL}/messages`, {
           senderId: currentUser._id,
           receiverId: TARGET_USER_ID,
           type: 'call',

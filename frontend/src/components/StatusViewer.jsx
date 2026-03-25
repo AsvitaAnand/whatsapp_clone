@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { MdClose, MdSend, MdPalette, MdDonutLarge, MdPhotoCamera, MdTextFields } from 'react-icons/md';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_URL } from '../config';
 
 const StatusViewer = ({ selectedStatusUser, currentUser, onClose, onStatusAdded }) => {
   const [activeIndex, setActiveIndex] = useState(0);

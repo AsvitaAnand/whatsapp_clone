@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { MdMonitor, MdMoreVert, MdSettings } from 'react-icons/md';
 import { FaWhatsapp } from 'react-icons/fa';
+import { API_URL } from '../config';
 
 const sampleUsers = [
   { username: 'Alice', email: 'alice@test.com', password: 'password123' },
@@ -20,7 +21,7 @@ const Login = ({ onLogin }) => {
 
   const loginProcess = async (emailToLogin, passwordToLogin) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { 
+      const res = await axios.post(`${API_URL}/auth/login`, { 
         email: emailToLogin, 
         password: passwordToLogin 
       });
@@ -32,7 +33,7 @@ const Login = ({ onLogin }) => {
 
   const registerProcess = async () => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', {
+      const res = await axios.post(`${API_URL}/auth/register`, {
         username,
         email,
         password
